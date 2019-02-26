@@ -51,3 +51,4 @@ MANIFEST
 # specific python packages
 geopathfinder
 pyraster
+latlongrid

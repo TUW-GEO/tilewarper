@@ -18,12 +18,14 @@ class SRTM(object):
         self.root_dirpath = root_dirpath_ext
         # target filenaming settings
         product_name = "CGIAR-CSI_v4.1_90M"
-        self.fields_def = OrderedDict(('product_name', {'len': len(product_name)}),
+        self.fields_def = OrderedDict([('product_name', {'len': len(product_name)}),
                                       ('grid', {'len': 6, 'delim': True}),
-                                      ('tile', {'len': 11}))
+                                      ('tile', {'len': 10})])
         self.fields_fixed = {'product_name': product_name}
+        self.out_ndv = -9999
         # source data directory path
-        self.ds_src_dirpath = r'/eodc/private/tuwgeo/users/cnavacch/data/external/srtm_csgiar41_data'
+        self.ds_src_dirpath = r"/eodc/private/tuwgeo/datapool_raw/srtm/vfp/mosaics/"
+
 
 
 class CorineLandCover(object):

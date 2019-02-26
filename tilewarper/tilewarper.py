@@ -22,6 +22,7 @@ dataset_definitions.py) for a given grid and sub-grid
 
 from tilewarper.dataset_definitions import get_dataset_def
 import re
+from osgeo import osr
 from pyraster import gdalport
 import os
 import glob
@@ -56,12 +57,13 @@ class TileWarper(object):
         Creates folder structure for the external dataset for a given tile id.
     query_data_all(filepath)
         Searches for .tif files in all sub-folders.
-    resample(self, infiles, outfile, res, resampling_type="near", ndv=None, dst_srs=None, extent=None, gdal_path=None)
+    resample(self, infiles, outfile, res, resampling_type="near", ndv=None, dst_srs=None, extent=None, gdal_dirpath=None)
         Resamples .tiff files.
 
     """
 
-    def __init__(self, ds_name, root_dirpath, in_filepath=None, gridname='EQUI7', sub_gridname='EU500M', gdal_path=None):
+    def __init__(self, ds_name, root_dirpath, in_filepath=None, gridname='EQUI7', sub_gridname='EU500M',
+                 gdal_dirpath=None):
         """
 
         Parameters
@@ -79,13 +81,13 @@ class TileWarper(object):
 
         """
 
-        self.dataset_name = ds_name.upper()
+        self.ds_name = ds_name.upper()
         self.ds_def = get_dataset_def(self.ds_name)(root_dirpath)
         if in_filepath is None:
             self.in_filepath = self.ds_def.ds_src_dirpath
         else:
             self.in_filepath = in_filepath
-        self.gdal_path = gdal_path
+        self.gdal_dirpath = gdal_dirpath
 
         # get all files
         self.in_filepaths = self.query_data_all(self.in_filepath)
@@ -103,7 +105,7 @@ class TileWarper(object):
         res = None
         for res_string_option in res_string_options:
             try:
-                res = TPS.decode_res(res_string_option)
+                res = TPS.decode_sampling(res_string_option)
                 break
             except:
                 pass
@@ -126,14 +128,17 @@ class TileWarper(object):
             If None, all tile names of the sub grid are used. (default None)
 
         """
+        sub_gridname_parts = self.sub_grid.name.split('_')
         if tilenames is None:
-            tilenames = self.sub_grid.tilesys.check_land_coverage(all_tiles=True)
+            ftilenames = self.sub_grid.search_tiles_in_geometry(self.sub_grid.polygon_geog, coverland=False)
         elif type(tilenames) != list:
-            tilenames = [tilenames]
+            ftilename = sub_gridname_parts[-1] + '_' + tilenames
+            ftilenames = [ftilename]
+        else:
+            ftilenames = [tilename if len(tilename) > 11 else sub_gridname_parts[-1] + '_' + tilename
+                          for tilename in tilenames]
 
-        for tilename in tilenames:
-            sub_gridname_parts = self.sub_grid.name.split('_')
-            ftilename = sub_gridname_parts[-1] + '_' + tilename
+        for ftilename in ftilenames:
             overlapping_filepaths = self._find_overlapping_filepaths(ftilename)
             if len(overlapping_filepaths) == 0:
                 print('No overlap for tile {0}'.format(ftilename))
@@ -149,7 +154,7 @@ class TileWarper(object):
                 pass
             else:
                 self.warp(overlapping_filepaths, out_filepath, self.res, dst_srs=tile_sref, extent=tile_extent,
-                          gdal_path=self.gdal_path)
+                          gdal_dirpath=self.gdal_dirpath)
 
     def _find_overlapping_filepaths(self, ftilename):
         """
@@ -172,10 +177,10 @@ class TileWarper(object):
             # get and project extent of external tiff
             ds = gdal.Open(filepath, gdal.GA_ReadOnly)
             ds_img = gdalport.GdalImage(ds, filepath)
-            overlapping_tiles = self.grid.search_tiles_in_geo_roi(extent=ds_img.get_extent(), epsg=None,
-                                                                 wkt=ds_img.projection(),
-                                                                 subgrid_ids=[self.sub_grid.core.tag],
-                                                                 coverland=True)
+            ds_sr = osr.SpatialReference()
+            ds_sr.ImportFromWkt(ds_img.projection())
+            overlapping_tiles = self.grid.search_tiles_in_roi(extent=ds_img.get_extent(), osr_spref=ds_sr,
+                                                              subgrid_ids=[self.sub_grid.core.tag], coverland=False)
 
             if ftilename in overlapping_tiles:
                 overlapping_filepaths.append(filepath)
@@ -212,7 +217,7 @@ class TileWarper(object):
         fields['grid'] = ftilename_parts[0]
         fields['tile'] = ftilename_parts[1]
         smart_filename = SmartFilename(fields, ds_def.fields_def, ext='.tif')
-        out_filepath = os.path.join(str(smart_path), str(smart_filename))
+        out_filepath = os.path.join(smart_path.get_dir(), str(smart_filename))
 
         return out_filepath
 
@@ -244,7 +249,7 @@ class TileWarper(object):
         return filepaths
 
     def warp(self, in_filepaths, out_filepath, res, resampling_type="cubic", ndv=None, dst_srs=None, extent=None,
-             gdal_path=None):
+             gdal_dirpath=None, overwrite=True):
         """
 
         Resamples .tiff files. Includes merging (if multiple files are given) and warping.
@@ -267,10 +272,12 @@ class TileWarper(object):
         extent: list (optional)
             Contains lower left and upper right coordinates of the region of interest [xmin, ymin, xmax, ymax].
             (default None)
-        gdal_path: str (optional)
+        gdal_dirpath: str (optional)
             Path to the GDAL executables. (default None)
 
         """
+        if os.path.exists(out_filepath) and overwrite:
+            os.remove(out_filepath)
 
         # compression settings
         comp = ["COMPRESS=LZW"]
@@ -291,8 +298,8 @@ class TileWarper(object):
         gdal_img = gdalport.GdalImage(gdal_ds, in_filepaths[0])
         in_ndv = gdal_img.get_band_nodata()
         in_ct = gdal_img.colormap()
-        if hasattr(self.dataset_def, 'out_ndv'):
-            out_ndv = self.dataset_def.out_ndv
+        if hasattr(self.ds_def, 'out_ndv'):
+            out_ndv = self.ds_def.out_ndv
 
         # merge files
         merge_success = False
@@ -323,7 +330,7 @@ class TileWarper(object):
                                                              for in_filepath in in_filepaths]),
                                                   os.path.basename(tmp_filepath)))
             merge_success, _ = gdalport.call_gdal_util('gdal_merge.py', src_files=in_filepaths, options=gdal_merge_opt,
-                                                       gdal_path=gdal_path)
+                                                       gdal_path=gdal_dirpath)
             if merge_success:
                 print(' - Done')
             else:
@@ -345,7 +352,7 @@ class TileWarper(object):
 
         print('Warping {0} -> {1} ...'.format(os.path.basename(warp_filepath), os.path.basename(out_filepath)))
         warp_success, _ = gdalport.call_gdal_util('gdalwarp', src_files=warp_filepath, dst_file=out_filepath,
-                                                  options=gdal_warp_opt, gdal_path=gdal_path)
+                                                  options=gdal_warp_opt, gdal_path=gdal_dirpath)
         if warp_success:
             print(' - Done')
         else:

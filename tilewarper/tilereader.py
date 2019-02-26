@@ -85,7 +85,7 @@ class TileReader(object):
                     if root_dirpath is None:
                         root_dirpath = self.root_dirpath
                     tilewarper = TileWarper(self.ds_id, root_dirpath, gridname=self.gridname,
-                                            sub_gridname=self.sub_gridname, gdal_path=gdal_path)
+                                            sub_gridname=self.sub_gridname, gdal_dirpath=gdal_path)
                     tilewarper.run(tilenames=tilename)
                     tile_filepaths = self.query_data(tile_dirpath, pattern=pattern)
                     if len(tile_filepaths) == 0:
