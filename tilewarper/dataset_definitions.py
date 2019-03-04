@@ -46,8 +46,30 @@ class EGM2008(object):
         self.ds_src_dirpath = r"/eodc/private/tuwgeo/users/cnavacch/data/external/geoid/EGM2008/EGM2008.tif"
 
 
+class SRTM_EGM2008(object):
+    """
+    Represents Digital Elevation Model.
+    """
+
+    def __init__(self, root_dirpath):
+        """
+        Initialises folder and filenaming structure
+        """
+        # target directory path settings
+        root_dirpath_ext = os.path.join(root_dirpath, 'SRTM_EGM2008')
+        self.root_dirpath = root_dirpath_ext
+        # target filenaming settings
+        product_name = "ellipsoid_heights_SRTM_EGM2008"
+        self.fields_def = OrderedDict([('product_name', {'len': len(product_name)}),
+                                       ('grid', {'len': 6, 'delim': True}),
+                                       ('tile', {'len': 10})])
+        self.fields_fixed = {'product_name': product_name}
+        self.out_ndv = -9999
+        # source data directory path
+        self.ds_src_dirpath = None
+
 # dictionary which links the dataset definition classes with a dataset id/name
-DATASET_MAP = {'SRTM': SRTM, 'EGM2008': EGM2008}
+DATASET_MAP = {'SRTM': SRTM, 'EGM2008': EGM2008, 'SRTM_EGM2008': SRTM_EGM2008}
 
 
 # TODO: also print folder and filenaming structure

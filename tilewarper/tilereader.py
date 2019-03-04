@@ -110,7 +110,7 @@ class TileReader(object):
             tilenames = [tilenames]
 
         data_dict = OrderedDict()
-        ds_def = get_dataset_def(self.ds_id)
+        ds_def = get_dataset_def(self.ds_id)(self.root_dirpath)
         for tilename in tilenames:
             ftilename = self.sub_gridname + '_' + tilename
             tile_dirpath = os.path.dirname(TileWarper.create_output_filepath(ds_def, self.gridname, self.sub_gridname,
@@ -190,3 +190,26 @@ class SRTMReader(TileReader):
 
         """
         super(SRTMReader, self).__init__(root_dirpath, 'SRTM', gridname=gridname, sub_gridname=sub_gridname)
+
+
+class SRTM_EGM2008Reader(TileReader):
+    """
+
+    Reader for external dataset 'DEM'.
+
+    """
+    def __init__(self, root_dirpath=None, gridname="EQUI7", sub_gridname='EU500M'):
+        """
+
+        Parameters
+        ----------
+        filepath: str
+            Filepath/directory root of the internal representation of the external dataset (or to resample to).
+        grid: str (optional)
+            Name/tag of the tiled projection system. (default 'EQUI7')
+        sub_grid: str (optional)
+            Name/tag of the tiled projection + resolution. (default 'EU500M')
+
+        """
+        super(SRTM_EGM2008Reader, self).__init__(root_dirpath, 'SRTM_EGM2008', gridname=gridname,
+                                                 sub_gridname=sub_gridname)
