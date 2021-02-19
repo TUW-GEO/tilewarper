@@ -51,7 +51,7 @@ class LAI_PROBAV(object):
         Represents LAI from Copernicus
         """
         # target directory path settings
-        root_dirpath_ext = os.path.join(rsroot.c,'Users/User/Work/data/data/product/LAI_test/init')
+        root_dirpath_ext = os.path.join(root_dirpath, 'init')
         self.root_dirpath = root_dirpath_ext
         # target filenaming settings
         product_name = "LAI_500M"
