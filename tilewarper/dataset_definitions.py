@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import os
-import rsroot
 
 class SRTM(object):
     """
