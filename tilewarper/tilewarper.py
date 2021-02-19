@@ -33,12 +33,12 @@ from geopathfinder.folder_naming import SmartPath
 from geopathfinder.file_naming import SmartFilename
 # tiled projection systems imports:
 from equi7grid.equi7grid import Equi7Grid
-#from latlongrid.latlongrid import LatLonGrid
+from latlongrid.latlongrid import LatLonGrid
 
 # TODO check multitemporal datasets and files with multiple bands
 # TODO implement query for input data sets (using geopathfinder)
 
-PROJ_TILE_SYS = {'EQUI7': Equi7Grid}  # fill it up with other projections
+PROJ_TILE_SYS = {'EQUI7': Equi7Grid, 'LATLON': LatLonGrid}  # fill it up with other projections
 
 
 class TileWarper(object):
