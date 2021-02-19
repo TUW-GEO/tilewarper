@@ -48,7 +48,7 @@ class EGM2008(object):
 class LAI_PROBAV(object):
     def __init__(self, root_dirpath):
         """
-        Represents LAI from Copernicus
+        Represents LAI from the Copernicus' PROBAV at 300M resolution
         """
         # target directory path settings
         root_dirpath_ext = os.path.join(root_dirpath, 'init')
@@ -61,7 +61,7 @@ class LAI_PROBAV(object):
         self.fields_fixed = {'product_name': product_name}
         self.out_ndv = 255
         # source data directory path
-        self.ds_src_dirpath = r'C:/Users/User/Work/data/data/LAI_test/init/'
+        self.ds_src_dirpath = None
 
 class SRTM_EGM2008(object):
     """
