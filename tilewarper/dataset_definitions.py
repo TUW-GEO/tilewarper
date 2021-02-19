@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import os
-
+import rsroot
 
 class SRTM(object):
     """
@@ -45,6 +45,23 @@ class EGM2008(object):
         # source data directory path
         self.ds_src_dirpath = r"/eodc/private/tuwgeo/users/cnavacch/data/external/geoid/EGM2008/EGM2008.tif"
 
+class LAI_PROBAV(object):
+    def __init__(self, root_dirpath):
+        """
+        Represents LAI from Copernicus
+        """
+        # target directory path settings
+        root_dirpath_ext = os.path.join(rsroot.c,'Users/User/Work/data/data/product/LAI_test/init')
+        self.root_dirpath = root_dirpath_ext
+        # target filenaming settings
+        product_name = "LAI_500M"
+        self.fields_def = OrderedDict([('product_name', {'len': len(product_name)}),
+                                      ('grid', {'len': 6, 'delim': True}),
+                                      ('tile', {'len': 10})])
+        self.fields_fixed = {'product_name': product_name}
+        self.out_ndv = 255
+        # source data directory path
+        self.ds_src_dirpath = r'C:/Users/User/Work/data/data/LAI_test/init/'
 
 class SRTM_EGM2008(object):
     """
@@ -69,7 +86,7 @@ class SRTM_EGM2008(object):
         self.ds_src_dirpath = None
 
 # dictionary which links the dataset definition classes with a dataset id/name
-DATASET_MAP = {'SRTM': SRTM, 'EGM2008': EGM2008, 'SRTM_EGM2008': SRTM_EGM2008}
+DATASET_MAP = {'SRTM': SRTM, 'EGM2008': EGM2008,'LAI_PROBAV' : LAI_PROBAV, 'SRTM_EGM2008': SRTM_EGM2008}
 
 
 # TODO: also print folder and filenaming structure
@@ -104,3 +121,4 @@ def get_dataset_def(var_name):
         print_ds()
         raise KeyError('Choose one from above or add the unknown data set to dataset_definitions.py.')
     return DATASET_MAP[var_name]
+
