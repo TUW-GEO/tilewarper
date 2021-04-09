@@ -242,10 +242,9 @@ class TileWarper(object):
         filepaths = []
         if not os.path.isfile(filepath):
             for dir_path, _, _ in os.walk(filepath):
-                filepaths.extend(glob.glob(os.path.join(dir_path, '*.tif')))
+                filepaths.extend(glob.glob(os.path.join(dir_path, '*.tif*')))
         else:
             filepaths = [filepath]
-
         return filepaths
 
     def warp(self, in_filepaths, out_filepath, res, resampling_type="cubic", ndv=None, dst_srs=None, extent=None,
